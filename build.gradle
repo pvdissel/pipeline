@@ -16,6 +16,7 @@ subprojects {
     apply plugin: 'java'
     group = createProjectGroupId(rootProject, it)
     version = rootProject.version
+    jar.baseName = "${rootProject.name}-${it.name}"
 }
 
 distributions {
