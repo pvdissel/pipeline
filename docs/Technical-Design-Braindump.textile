@@ -1,0 +1,268 @@
+Workflow-based automated task executor
+Example specific usage: Continuous Integration server that is fully Continuous Delivery enabled.
+
+h2. Focus points
+
+* Generic purpose
+* Workflow-based
+* Extensible through plugins
+* Version-controlled
+** Configuration-as-Code
+** Infrastructure-as-Code
+** Audit-able
+* Distributed (master-slave?)
+* Don't re-invent the wheel, reuse/integrate existing tools/libraries, ideas, principles
+* Lightweight
+* Monitored / Usage Statistics
+
+h2. Feature ideas
+
+* workflow/Pipeline support, meaning
+** a pipeline describes the complete delivery process of a project
+** any job with the right configuration can be runned through any pipeline
+** multiple -pipelines- jobs of a project can run in parallel
+** per -pipeline- job run, duplication of steps and files is minimized, meaning
+*** data sharing within stages and jobs of a pipeline is encouraged
+** can exist of multiple stages, each stage
+*** can run in parallel with other stages in the same pipeline
+*** can stop execution of the pipeline if it requires the previous stage to be succesful
+*** can exist of multiple jobs, each job
+**** can run in parallel with other jobs in the same stage
+** each stage and job has
+*** an order of execution
+*** an exitCode
+* -Workflow/pipeline templates support- Should not be needed as any job can be executed through the pipeline
+* Trail-and-error mode, meaning
+** No configuration is used in auto-triggered/scheduled jobs, until that configuration is published to be "production ready"
+** When a job is started it takes a copy of its configuration and uses that during its run, making it undependent of later changes of the job configuration during the job run
+** Configuration changes can be tried and tested manually without affecting any of the auto-triggered/scheduled jobs. Making managing the pipelines as safe as it can be (keep in mind that external resources like nexus don't know of such a mode, so they can still be affected by the jobs runned in trail-and-error mode)
+** Plugin updates can be tested the same way as the configuration changes above
+* Configuration-as-code, meaning
+** All configuration are available as files and separated from any dynamically generated files. Making it possible to put the configuration under version control and there audit-able
+* Infrastructure-as-code, meaning
+** All tools required for the pipelines are managed through configuration files (by means of Puppet/Chef/..)
+** Multiple versions of tools are supported (but *may* require separated build servers for specific tool versions)
+* Distributed, meaning
+** Multiple build servers can be used
+** Light weigth frontend which doesn't need to be on a build-server. Therefore can have a constant good performance
+** Locks & Latches support to discourage jobs from executing in parallel (locks) or to encourage jobs to execute in parallel (latches):
+*** Each lock/latch needs to be configurable to set globally or per Hudson instance. Often jobs can't run in parallel on the same hudson instance or destination server (eg. for deployment), but they're fine running in parellel on different hudson instances or destination servers
+** Limited sharing, meaning:
+*** Whenever possible, data is shared between tasks, but must be limited, eg:
+**** For a Maven task; private maven repo's can be partly shared between tasks, minimizing duplicated networking and disk-write actions
+**** For a compilation task; compiled code shared between multiple tasks, minimizing duplicated compilation and disk-write actions (google distributed build filesystem idea)
+* Any project can be delivered with this continuous delivery server, as long as the specific build tools are available (java, ruby, groovy, python, maven, ant, bundlr, ...)
+* Jobs should never be killed in the middle of their builds:
+** When a node with running jobs on it is taken offline on purpose, the jobs running on it should be completed and not killed
+** When a node goes offline by accident (for whatever reason), the jobs running on that node need to be re-triggered on another node
+* Personalized/Private builds, meaning:
+** Grid can be used to execute on a personal/private resource ((d)vcs source)
+* Monitored so usage, performance, failure(, etc.?) statistics are gathered and exposed:
+** These should be made available for external use. Maybe messagebus where "backend-frontends" can subscribe one.
+
+h2. Feature ideas 2
+
+* A job manager, instead of Locks & Latches, a manager that takes control of a set of jobs/stages/pipelines with the possibility to configure that the jobs need to run in parallel or not
+* Eventqueue/Worker setup. Tasks should be executed thru some kind of eventqueue/worker system so tasks can be executed and watched on the background. Even better will be when all tasks are executed by seperated processes, meaning when one process hangs non of the other processes are influenced by it (except for running slower maybe), making it possible to kill the specific problematic process
+* Build tasks of a job need to have settings/seperation for:
+** should the task 'always' be executed? (undependent if previous task(s) failed)
+** should task failure/success state influence the state of the job?
+   (Or have a way to define different type of tasks, eg. init, build, cleanup.. like maven phases. That way states can be tracked per type/phase)
+** Possibility to define what workflow/pipeline should be followed per way that the job is triggered, eg:
+*** on manual trigger; just execute the specific job and stop after that
+*** on pipeline trigger; follow workflow
+*** on schedule trigger?; ....
+* Bulk actions, any UI should support doing bulk actions to make maintenance as easy as possible
+* SCM plugins must provide an easy solution for defining security details like ssh-keys, eg. via a connection-store(?). The must be no need for manually placing authentication files anywhere then as part of the job config. All authentication details must be kept securily and no passwords should be logged in any log
+* Option of mounting the commands and reports as a fuse file system for unix based servers. This again increases the options for easy integration. eg. a /proc or /sys or /dev a-like view on the builds
+
+h2. Name ideas
+
+* "Hive" or "colony"; from a bees hive/colony, having a queen-bee (master), ({specific}) worker-bee(s) (slaves), ({specific}) drone(s) (side-tasks, eg. UI, reporting, stats, logging, ...)
+** For background story check:
+*** "Beehive":http://en.wikipedia.org/wiki/Beehive
+*** "Queen Bee":http://en.wikipedia.org/wiki/Queen_bee
+*** "Worker Bee":http://en.wikipedia.org/wiki/Worker_bee and "Laying Worker Bee":http://en.wikipedia.org/wiki/Laying_worker_bee
+*** "Drone Bee":http://en.wikipedia.org/wiki/Drone_(bee) and "Drone":http://en.wikipedia.org/wiki/Drone
+* "Pipeline" is kinda CI/CD focussed, in the physical world this is called an "Assembly line"
+* something related to "Orchestation Platform/Manage" as used in http://vimeo.com/49367413
+* Cy / Centurion / Centuri
+** Background info:
+*** http://en.wikipedia.org/wiki/CY
+*** http://en.wikipedia.org/wiki/Cy_%28Battlestar_Galactica%29
+*** http://en.battlestarwiki.org/wiki/Cyrus_%28Cylon%29
+*** http://en.battlestarwiki.org/wiki/Centurion_%28TOS%29
+*** http://en.wikipedia.org/wiki/Centurion
+*** http://en.battlestarwiki.org/wiki/Centuri
+*** http://en.wikipedia.org/wiki/Centuri
+** Domain ideas:
+*** cy.ci
+*** cy.io <- Cy Input/Output
+*** centur.io/n
+* Continuous (Build) Automation (or Other things/stuff you want to automate)
+** cbaootywta
+** cbaoosywta
+** CiBiAuto
+* BuiLd AutomatIoN aka BLAIN
+* Build Continuous AutoMation aka BeCAMe
+* Automation COntinuous Build aka ACrOBat
+* COntinuous Build AuTomation aka aCrOBAT
+* Build Automation COntinuous aka BACklOg
+* Build Continuous AUtomation aka BeCAUse
+* COntinuous Build Automation aka CrOwBAr
+* Build AutoMation aka BeAM
+* Continuous AutomatioN aka CyAN
+* Continuous Your AutomatioN aka CyAN
+* Continous Build AuTomation aka CBAT
+* Build AutomatiON aka BArON
+** Possible logo: "http://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Ermine_Robe_%28Heraldry%29.svg/265px-Ermine_Robe_%28Heraldry%29.svg.png":http://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Ermine_Robe_%28Heraldry%29.svg/265px-Ermine_Robe_%28Heraldry%29.svg.png
+** Possible Slogans:
+*** "Baron has all these butlers working for him. Hudson, Travis, Jenkins."
+*** ¨You have butlers.. and then you have the Baron!¨
+** GreenBaron
+* Continuous Integration For All Stakeholders aka CIfas
+* Build Automation CONtinuous aka BACON
+* FreshCI
+* Fresh-CI
+* Fresh*
+
+h1. References for ideas
+
+* "https://github.com/travis-ci/travis-ci#readme":https://github.com/travis-ci/travis-ci#readme
+* "http://www.thoughtworks-studios.com/go-agile-release-management":http://www.thoughtworks-studios.com/go-agile-release-management
+* "http://zutubi.com/":http://zutubi.com/
+
+h1. Don'ts
+
+* Don't do project inheritance unless settings can be overridden/inherited per specific property, not a group or section of properties, but per property! Otherwise is still unusable (see Hudson implementation for how it should *not* be implemented
+
+h1. Others
+
+* http://www.continuousintegrationtools.com
+* http://www.continuousintegrationtutorials.com
+* https://github.com/spotify/luigi
+* https://github.com/danryan/mastermind
+
+h2. Travis-CI
+
+I did some checkup of "Travis-CI":http://www.travis-ci.org, that looks very promising qua infrastructure as they:
+
+* Infrastructure is split into small focussed parts (worker, hub, build, listener, boxes, core, cookbooks, cli,
+* Works with eventqueues and workers
+* Makes use of existing services, libraries and tools for everything
+* Job configs are version-controlled (placed in the git repo of the job project actually)
+
+Pros:
+* Ideal for integration-test and auto-deploy testing -- Every job run gets a clean virtual-machine (uses snapshotting for quick resets)
+
+Cons:
+* (seems to be) Purely focussed on Github projects
+
+Note that they are looking into creating a on-demand/in-house solution: "www.travis-ci.com":http://www.travis-ci.com
+
+h2. CicleCI
+
+Travis-CI look-a-like
+"https://circleci.com":https://circleci.com
+
+h2. Tddium
+
+Travis-CI look-a-like
+"https://www.tddium.com":https://www.tddium.com
+
+h2. Semaphore
+
+Travis-CI look-a-like, specific for ruby
+"https://semaphoreapp.com":https://semaphoreapp.com
+
+h2. Electric Cloud toolset
+
+After quick look at their site. It looks like the combined tools of electic-cloud come to the same set of features as ThoughtWorks Go and UrbanCode' tools.
+"http://www.electric-cloud.com":http://www.electric-cloud.com
+
+h2. Urban Code toolset
+
+"http://www.urbancode.com":http://www.urbancode.com
+
+h2. Rundeck
+
+RunDeck looks interesting: "http://rundeck.org":http://rundeck.org
+It's purpose is system/node orchestration and automation, but it also includes workflow functionality.
+Maybe it's usable to look at parts of the functionality?
+
+h2. Quartz Scheduler library
+
+"http://www.quartz-scheduler.org":http://www.quartz-scheduler.org looks like the perfect Job execution library to use
+
+h2. Pulse
+
+"http://zutubi.com":http://zutubi.com has some nice features like:
+* template configuration system
+* personal builds
+* project dependencies view (a'la hudson up/downstream projects)
+
+h2. Go
+
+"http://www.thoughtworks-studios.com/go-agile-release-management":http://www.thoughtworks-studios.com/go-agile-release-management has the pipeline principle in its job configuration naming, but it's still bound to a specific job/project. Templating is available but you shouldn't need templating if a job is only a small bunch of config which you put through the pipeline.
+Also, Go Enterprise costs 300 dollar per user per year. And everything that makes configuring jobs a bit easier is only available in the enterprise edition. Incl. Pipeline templates and easy grid usage (not tested this, this is what the version compare shows: "http://www.thoughtworks-studios.com/go-agile-release-management/compare":http://www.thoughtworks-studios.com/go-agile-release-management/compare)
+
+h2. Continuous Integration in general
+
+A good write-up of CI in general, CI architectures, etc:
+"http://www.aosabook.org/en/integration.html":http://www.aosabook.org/en/integration.html
+
+Release management side of CI:
+"http://niek.bartholomeus.be/2013/05/14/implementing-a-release-management-solution-in-a-traditonal-enterprise/":http://niek.bartholomeus.be/2013/05/14/implementing-a-release-management-solution-in-a-traditonal-enterprise/
+
+Managing Build Jobs for Continuous Delivery:
+"http://www.infoq.com/articles/Build-Jobs-Continuous-Delivery":http://www.infoq.com/articles/Build-Jobs-Continuous-Delivery
+
+h1. Implementation resources
+
+* Using Java as Native Linux Apps – Calling C, Daemonization, Packaging, CLI
+  "http://java.dzone.com/articles/using-java-native-linux-apps-%E2%80%93":http://java.dzone.com/articles/using-java-native-linux-apps-%E2%80%93
+* Good architectural characteristics:
+  "http://www.infoq.com/news/2012/10/future-monitoring":http://www.infoq.com/news/2012/10/future-monitoring
+** Characteristics like:
+*** composable ("well-defined responsibilities, interfaces and protocols")
+*** resilient ("resilient to outages within the monitoring architecture")
+*** self-service ("doesn't require root access or an Ops member to deploy")
+*** automated ("it's capable of being automated")
+*** correlative ("implicitly model relationships between services")
+*** craftsmanship ("it's a pleasure to use")
+** Possible components (based on a monitoring system):
+*** sensors "are stateless agents that gather and emit metrics to a log stream, over HTTP as JSON, or directly to the metrics store"
+*** aggregators "are responsible for transformation, aggregation, or possibly simply relaying of metrics"
+*** state engine "tracks changes within the event stream, ideally it can ascertain faults according to seasonality and forecasting"
+*** storage engines "should support transformative functions and aggregations, ideally should be capable of near-realtime metrics retrieval and output in standard formats such as JSON, XML or SVG"
+*** scheduler "provides an interface for managing on-call and escalation calendars"
+*** notifiers "are responsible for composing alert messages using data provided by the state engine and tracking their state for escalation purposes"
+*** visualizers "consist of dashboards and other user interfaces that consume metrics and alerts from the system" 
+* Directed Acyclic Graph implementations:
+** "http://plexus.codehaus.org/plexus-utils/apidocs/index.html":http://plexus.codehaus.org/plexus-utils/apidocs/index.html
+   (as used in Maven)
+** "http://jgrapht.org":http://jgrapht.org
+* DSLs in Jenkins:
+** "https://wiki.jenkins-ci.org/display/JENKINS/Build+Flow+Plugin":https://wiki.jenkins-ci.org/display/JENKINS/Build+Flow+Plugin
+** "https://wiki.jenkins-ci.org/display/JENKINS/Job+DSL+Plugin":https://wiki.jenkins-ci.org/display/JENKINS/Job+DSL+Plugin
+* Server troubleshooting, the first 5 minutes
+** "http://devo.ps/blog/2013/03/06/troubleshooting-5minutes-on-a-yet-unknown-box.html":http://devo.ps/blog/2013/03/06/troubleshooting-5minutes-on-a-yet-unknown-box.html
+* look at "gradle":http://www.gradle.org for implementation ideas
+* look at "Tesla":http://tesla.io/tesla/index.html for implementation ideas
+
+h1. Maintaining an open-source project
+* "http://coding.smashingmagazine.com/2013/01/03/starting-open-source-project/":http://coding.smashingmagazine.com/2013/01/03/starting-open-source-project/
+
+h1. Slogan explained
+
+bq. Make the Impossible Possible
+
+Continuous Integration, Delivery, no way, that will never work...
+
+bq. Make the Possible Simple
+
+Sure it will work, just make it simpeler
+
+bq. Make the Simple Go Away
+
+Automate
