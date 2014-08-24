@@ -1,0 +1,17 @@
+apply plugin: 'groovy'
+apply plugin: 'application'
+
+applicationName = 'pipe-runner'
+description = 'pipe-runner --the pipeline runner, executes the project pipeline a pipeline configuration file'
+mainClassName = 'cd.pipeline.runner.PipelineRunner'
+
+dependencies {
+    compile libraries.groovy
+//    compile project(':api')
+//    compile project(':groovydsl')
+//    compile project(':configmodel')
+//    compile libraries.jcommander
+
+    testCompile libraries.spock
+    testCompile libraries.hamcrest
+}

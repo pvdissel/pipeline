@@ -4,6 +4,7 @@ include 'graphs'
 include 'groovydsl'
 include 'runner'
 include 'listener'
+include 'run'
 
 rootProject.name = 'pipeline'
 rootProject.children.each { project ->
