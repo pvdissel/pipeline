@@ -1,0 +1,10 @@
+
+stage 'build', {
+    echo 'Building...'
+    run 'ls --alal'
+}
+
+stage 'distribution', {
+    echo 'Creating a distributable...'
+    run 'echo "dist dist dist"'
+}

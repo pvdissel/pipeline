@@ -8,8 +8,8 @@ dependencies {
     compile project(':configmodel')
 
     compile libraries.mavenSharedUtils
-    compile libraries.mail
-    compile libraries.springContextSupport
+//    compile libraries.mail
+//    compile libraries.springContextSupport
 
     testCompile libraries.spock
 }

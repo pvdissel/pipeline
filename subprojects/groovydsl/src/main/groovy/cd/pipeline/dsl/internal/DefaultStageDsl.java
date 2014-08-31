@@ -79,6 +79,7 @@ public class DefaultStageDsl implements InternalStageDsl {
                                    final WriterStreamConsumer stdOut, final WriterStreamConsumer stdErr) {
             final int exitStatus;
             try {
+                // TODO: somehow not all exit commands return the expected exitStatus on failure..
                 exitStatus = CommandLineUtils.executeCommandLine(cl, stdOut, stdErr);
             } catch (CommandLineException e) {
                 throw new PipelineException("Failed to execute command", e);

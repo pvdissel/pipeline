@@ -2,11 +2,8 @@ package cd.pipeline.dsl.internal;
 
 import cd.pipeline.api.Pipeline;
 import cd.pipeline.config.DefaultPipeline;
-import cd.pipeline.dsl.AnnounceDsl;
-import cd.pipeline.dsl.MessengerDsl;
 import cd.pipeline.dsl.StageDsl;
 import cd.pipeline.event.PipeEvent;
-import cd.pipeline.messenger.MessageContext;
 import cd.pipeline.util.ConfigureUtil;
 import groovy.lang.Closure;
 
@@ -16,8 +13,6 @@ import java.util.List;
 import java.util.Set;
 
 public class DefaultPipelineDsl implements InternalPipelineDsl {
-    private final AnnounceDsl announce = new DefaultAnnounceDsl();
-    private final MessengerDsl messenger = new DefaultMessengerDsl();
     private Set<InternalStageDsl> stages = new LinkedHashSet<>();
     private List<PipeEvent> events = new ArrayList<>();
     private boolean hasFailedStage = false;
@@ -57,20 +52,5 @@ public class DefaultPipelineDsl implements InternalPipelineDsl {
             pipeline.add(stage.export());
         }
         return pipeline;
-    }
-
-    @Override
-    public AnnounceDsl announce(Closure closure) {
-        ConfigureUtil.configure(announce, closure);
-        for (MessageContext context : announce.toContexts()) {
-            messenger.toMessenger().process(context, events.get(events.size() - 1));
-        }
-        return announce;
-    }
-
-    @Override
-    public MessengerDsl messenger(Closure closure) {
-        ConfigureUtil.configure(messenger, closure);
-        return messenger;
     }
 }
